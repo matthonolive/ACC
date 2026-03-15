@@ -5,7 +5,6 @@ from scipy import signal
 
 
 # Read CSV with no header
-# Replace "data.csv" with your filename
 df = pd.read_csv("monthly.csv", header=None, names=["x", "y"])
 
 # Extract columns

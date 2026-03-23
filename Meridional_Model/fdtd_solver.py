@@ -29,8 +29,15 @@ def FDTD_Meridional(t, dt, C, theta, S, K):
 
     for n in range(1, len(t)):
         nu_C = np.zeros_like(C)
-        for i in range(1, len(theta)-2):
-            nu_C[i] = (dt/(np.cos(to_rad(theta[i])) * dtheta)) * (K[i] * np.cos(to_rad(theta[(i+1)])) * (C_t[n-1][(i+2)] - C_t[n-1][i])/dtheta - K[(i-1)]*np.cos(to_rad(theta[(i-1)])) * (C_t[n-1][i] - C_t[n-1][(i-2)])/dtheta) + C_t[n-1][i] + dt * S[i, n]
+        for i in range(1, len(theta)-1):
+
+            F_l = (K[i] + K[i+1])/2 * (np.cos(to_rad(theta[i])) + np.cos(to_rad(theta[i+1])))/2 * (C_t[n-1][i+1] - C_t[n-1][i])/dtheta
+            F_r = (K[i] + K[i-1])/2 * (np.cos(to_rad(theta[i])) + np.cos(to_rad(theta[i-1])))/2 * (C_t[n-1][i] - C_t[n-1][i-1])/dtheta
+            nu_C[i] = (dt/(np.cos(to_rad(theta[i])) * dtheta)) * (F_l - F_r) + C_t[n-1][i] + dt * S[i, n]
+        
+        nu_C[0] = nu_C[1]
+        nu_C[-1] = nu_C[-2]
+        
         C_t = np.append(C_t, [nu_C], axis=0)
 
     return C_t

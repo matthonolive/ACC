@@ -73,14 +73,18 @@ def FDTD_CN(t, dt, C, theta, S, K):
     L_lower = np.zeros(N)
     L_main = np.zeros(N)
     L_upper = np.zeros(N)
+    R_lower = np.zeros(N)
+    R_main = np.zeros(N)
+    R_upper = np.zeros(N)
+
     for i in range(1, N-1):
         L_lower[i] = -dt/2 * lambda_minus[i]
         L_main[i]  = 1 + dt/2 * (lambda_plus[i] + lambda_minus[i])
         L_upper[i] = -dt/2 * lambda_plus[i]
 
-        R_lower = dt/2 * lambda_minus[i]
-        R_main = 1 - dt/2 * (lambda_plus[i] + lambda_minus[i])
-        R_upper = dt/2 * lambda_plus[i]
+        R_lower[i] = dt/2 * lambda_minus[i]
+        R_main[i] = 1 - dt/2 * (lambda_plus[i] + lambda_minus[i])
+        R_upper[i] = dt/2 * lambda_plus[i]
 
     # No-flux boundary conditions: C[0] = C[1], C[-1] = C[-2]
     L_main[0] = 1
@@ -103,7 +107,7 @@ def FDTD_CN(t, dt, C, theta, S, K):
         C_old = C_t[n-1, :]
         rhs = np.zeros(N)
         for i in range(1, N-1):
-            rhs[i] = R_lower * C_old[i-1] + R_main * C_old[i] + R_upper * C_old[i+1] + dt * S[i, n]
+            rhs[i] = R_lower[i] * C_old[i-1] + R_main[i] * C_old[i] + R_upper[i] * C_old[i+1] + dt * S[i, n]
     
         rhs[0] = 0
         rhs[-1] = 0
@@ -125,7 +129,7 @@ def main():
     S = np.zeros((360, len(t)))
     S[180, :] = 1000
  
-    result = CN_Meridional(t, dt, C, theta, S, K)
+    result = FDTD_CN(t, dt, C, theta, S, K)
  
     print("Final time step min/max:", result[-1].min(), result[-1].max())
     print("Shape:", result.shape)

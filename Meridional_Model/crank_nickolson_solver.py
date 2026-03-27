@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def to_rad(degree):
     return degree * np.pi / 180
@@ -59,7 +60,7 @@ def FDTD_CN(t, dt, C, theta, S, K):
     lambda_plus = np.zeros(N)
     lambda_minus = np.zeros(N)
 
-    for i in range(N-1):
+    for i in range(1, N-1):
         K_plus = (K[i] + K[i+1]) / 2
         K_minus = (K[i] + K[i-1]) / 2
         cos_plus = (np.cos(theta_rad[i]) + np.cos(theta_rad[i+1])) / 2
@@ -116,24 +117,79 @@ def FDTD_CN(t, dt, C, theta, S, K):
     
     return C_t
 
+def load_monthly_source(csv_path, value_col="ppm_global_contribution_by_lat"):
+    df = pd.read_csv(csv_path)
+
+    # Build a monthly index
+    df["date"] = pd.to_datetime(
+        {
+            "year": df["year"].astype(int),
+            "month": df["month"].astype(int),
+            "day": 1,
+        }
+    ).dt.to_period("M")
+
+    # latitude x month table
+    table = (
+        df.pivot_table(
+            index="latitude",
+            columns="date",
+            values=value_col,
+            aggfunc="first"
+        )
+        .sort_index()
+        .sort_index(axis=1)
+    )
+
+    if table.isna().any().any():
+        raise ValueError("Missing latitude-month entries in source CSV.")
+
+    theta = table.index.to_numpy(dtype=float)          # degrees
+    dates = table.columns                              # pandas PeriodIndex
+    dC_src = table.to_numpy(dtype=float)               # shape (N_lat, N_months)
+
+    return theta, dates, dC_src
+
 def main():
- 
-    C = np.ones(360) * 315
-    theta = np.linspace(-89.5, 89.5, 360)
- 
-    K = np.ones(360) * 0.8
- 
+    # Read the monthly source from the CSV
+    theta, dates, dC_src = load_monthly_source(
+        "zonal_avg.csv",
+        value_col="ppm_local_column_equiv"
+    )
+
+    N = len(theta)
+    N_months = dC_src.shape[1]
+
+    # Initial concentration and diffusion grid must match theta length
+    C = 337.5 + 1.5 * np.sin(np.deg2rad(theta))
+    K = np.ones(N) * 0.8
+
+    # One timestep = one month
     dt = 1 / 12
-    t = np.arange(0, 50, dt)
- 
-    S = np.zeros((360, len(t)))
-    S[180, :] = 1000
- 
+
+    #Need yearly rate per month
+    S = np.zeros((N, N_months + 1))
+    S[:, 1:] = dC_src / dt * 0.55
+
+    # Time array must match the source length
+    t = np.arange(N_months + 1) * dt
+
     result = FDTD_CN(t, dt, C, theta, S, K)
- 
+
+    print("Result shape:", result.shape)
+    print("Theta shape:", theta.shape)
+    print("Source shape:", S.shape)
+    print("First month:", dates[0])
+    print("Last month:", dates[-1])
+
+    # diagnostics
+    idx_ml = np.argmin(np.abs(theta - 19.5))
+    print("Nearest latitude to Mauna Loa:", theta[idx_ml])
+    print("Initial concentration there:", result[0, idx_ml])
+    print("Final concentration there:", result[-1, idx_ml])
+
+    print("South Pole:", result[-1, 0])
     print("Final time step min/max:", result[-1].min(), result[-1].max())
-    print("Shape:", result.shape)
- 
  
 if __name__ == "__main__":
     main()

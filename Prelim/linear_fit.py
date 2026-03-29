@@ -17,9 +17,7 @@ def linear_model(x, m, b):
 # -----------------------------
 # Load data
 # -----------------------------
-# Assumes CSV has no header and is formatted like:
-# 1,322.25
-# 2,321.9
+
 data = np.loadtxt(filename, delimiter=",")
 x = data[:, 0]
 y = data[:, 1]

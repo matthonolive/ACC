@@ -5,8 +5,8 @@ from scipy.optimize import curve_fit
 # -----------------------------
 # User settings
 # -----------------------------
-filename = "monthly.csv"   # change this to your CSV filename
-sigma_y_value = 0.5     # uncertainty on every y point
+filename = "monthly.csv"  
+sigma_y_value = 0.5   
 
 # -----------------------------
 # Define linear model

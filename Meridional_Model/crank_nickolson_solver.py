@@ -150,6 +150,22 @@ def load_monthly_source(csv_path, value_col="ppm_global_contribution_by_lat"):
 
     return theta, dates, dC_src
 
+def export_latitude_timeseries(result, theta, dates, target_lat, out_csv):
+    idx_lat = np.argmin(np.abs(theta - target_lat))
+    actual_lat = theta[idx_lat]
+
+    export_df = pd.DataFrame({
+        "year": dates.year.astype(int),
+        "month": dates.month.astype(int),
+        "date": dates.to_timestamp(),
+        "simulated_ppm": result[1:, idx_lat],
+        "target_latitude": target_lat,
+        "model_latitude": actual_lat,
+    })
+
+    export_df.to_csv(out_csv, index=False)
+    return idx_lat, actual_lat
+
 def main():
     # Read the monthly source from the CSV
     theta, dates, dC_src = load_monthly_source(
@@ -176,20 +192,31 @@ def main():
 
     result = FDTD_CN(t, dt, C, theta, S, K)
 
-    print("Result shape:", result.shape)
-    print("Theta shape:", theta.shape)
-    print("Source shape:", S.shape)
-    print("First month:", dates[0])
-    print("Last month:", dates[-1])
+    # print("Result shape:", result.shape)
+    # print("Theta shape:", theta.shape)
+    # print("Source shape:", S.shape)
+    # print("First month:", dates[0])
+    # print("Last month:", dates[-1])
 
-    # diagnostics
-    idx_ml = np.argmin(np.abs(theta - 19.5))
-    print("Nearest latitude to Mauna Loa:", theta[idx_ml])
-    print("Initial concentration there:", result[0, idx_ml])
-    print("Final concentration there:", result[-1, idx_ml])
+    # # diagnostics
+    # idx_ml = np.argmin(np.abs(theta - 19.5))
+    # print("Nearest latitude to Mauna Loa:", theta[idx_ml])
+    # print("Initial concentration there:", result[0, idx_ml])
+    # print("Final concentration there:", result[-1, idx_ml])
 
-    print("South Pole:", result[-1, 0])
-    print("Final time step min/max:", result[-1].min(), result[-1].max())
+    # print("South Pole:", result[-1, 0])
+    # print("Final time step min/max:", result[-1].min(), result[-1].max())
+
+    idx_lat, actual_lat = export_latitude_timeseries(
+        result, theta, dates,
+        target_lat=-14.25,
+        out_csv="american_samoa_simulated.csv"
+    )
+
+    print("Requested latitude:", -14.25)
+    print("Nearest model latitude:", actual_lat)
+    print("Initial concentration there:", result[0, idx_lat])
+    print("Final concentration there:", result[-1, idx_lat])
  
 if __name__ == "__main__":
     main()

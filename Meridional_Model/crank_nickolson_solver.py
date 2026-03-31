@@ -210,10 +210,9 @@ def main():
     idx_lat, actual_lat = export_latitude_timeseries(
         result, theta, dates,
         target_lat=-14.25,
-        out_csv="american_samoa_simulated.csv"
+        out_csv="alaska_simulated.csv"
     )
 
-    print("Requested latitude:", -14.25)
     print("Nearest model latitude:", actual_lat)
     print("Initial concentration there:", result[0, idx_lat])
     print("Final concentration there:", result[-1, idx_lat])

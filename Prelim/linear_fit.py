@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 '''
-Generic linea rcurve fit script
+Generic linear curve fit script
+
+Written with the help of copilot, not necessarily bug free.  Use at own risk
 '''
 
 

@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+OBS_UNCERTAINTY_PPM = 0.2
 
 def main():
-    sim_df = pd.read_csv("american_samoa_simulated.csv")
+    sim_df = pd.read_csv("canada_simulated.csv")
     sim_df["date"] = pd.to_datetime(sim_df["date"])
 
     obs_df = pd.read_csv(
-        "American_Samoa.csv",
+        "canada.csv",
         header=None,
         names=["year", "month", "observed_ppm"]
     )
@@ -31,6 +32,9 @@ def main():
     df["error"] = df["simulated_ppm"] - df["observed_ppm"]
     df["abs_error"] = df["error"].abs()
 
+    df["obs_lower"] = df["observed_ppm"] - OBS_UNCERTAINTY_PPM
+    df["obs_upper"] = df["observed_ppm"] + OBS_UNCERTAINTY_PPM
+
     mae = df["abs_error"].mean()
     rmse = np.sqrt(np.mean(df["error"]**2))
     bias = df["error"].mean()
@@ -44,25 +48,38 @@ def main():
     print(f"Max abs error: {max_abs_error:.4f} ppm")
     print(f"Correlation: {corr:.4f}")
 
-    df.to_csv("american_samoa_comparison.csv", index=False)
+    df.to_csv("alaska_comparison.csv", index=False)
 
     plt.figure(figsize=(11, 6))
-    plt.plot(df["date"], df["observed_ppm"], label="Observed (American Samoa)")
+    plt.plot(df["date"], df["observed_ppm"], label="Observed (Alert, Canada)")
     plt.plot(df["date"], df["simulated_ppm"], label="Simulated (diffusion model)")
-    plt.xlabel("Date")
-    plt.ylabel("CO$_2$ (ppm)")
-    plt.title("American Samoa: observed vs simulated CO$_2$")
+    plt.xlabel("Date", fontsize=14)
+    plt.ylabel("CO$_2$ (ppm)", fontsize=14)
+    plt.title("Canada: observed vs simulated CO$_2$", fontsize=14)
     plt.grid(True)
-    plt.legend()
+    plt.legend(fontsize=14)
     plt.tight_layout()
+
+    # Dotted uncertainty lines around observations
+    plt.plot(
+        df["date"], df["obs_upper"],
+        linestyle=":", linewidth=1.5,
+        label=f"Observed + {OBS_UNCERTAINTY_PPM:.1f} ppm"
+    )
+    plt.plot(
+        df["date"], df["obs_lower"],
+        linestyle=":", linewidth=1.5,
+        label=f"Observed - {OBS_UNCERTAINTY_PPM:.1f} ppm"
+    )
+
     plt.show()
 
     plt.figure(figsize=(11, 4))
     plt.plot(df["date"], df["error"])
     plt.axhline(0.0, linestyle="--")
-    plt.xlabel("Date")
-    plt.ylabel("Simulated - Observed (ppm)")
-    plt.title("Residuals")
+    plt.xlabel("Date", fontsize=14)
+    plt.ylabel("Simulated - Observed (ppm)", fontsize=14)
+    plt.title("Residuals", fontsize=14)
     plt.grid(True)
     plt.tight_layout()
     plt.show()

@@ -7,10 +7,9 @@ from scipy.odr import ODR, Model, RealData
 df = pd.read_csv("gradient_vs_anthro.csv", header=None)
 
 # Extract columns (0-based indexing)
-gradient = pd.to_numeric(df.iloc[:, 2], errors="coerce").to_numpy()       # 3rd column
-emissions = pd.to_numeric(df.iloc[:, 3], errors="coerce").to_numpy()      # 4th column
-emissions_unc = pd.to_numeric(df.iloc[:, 4], errors="coerce").to_numpy()  # 5th column
-
+gradient = pd.to_numeric(df.iloc[:, 2], errors="coerce").to_numpy()       
+emissions = pd.to_numeric(df.iloc[:, 3], errors="coerce").to_numpy()      
+emissions_unc = pd.to_numeric(df.iloc[:, 4], errors="coerce").to_numpy()  
 # Constant uncertainty in gradient
 gradient_unc = np.sqrt(0.5**2 + 0.5**2)
 
